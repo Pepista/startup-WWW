@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waifu Wheel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ff758c, #ff7eb3);
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        header {
+            background: #333;
+            padding: 20px;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+        footer {
+            background: #333;
+            padding: 10px;
+            color: #fff;
+            font-size: 1rem;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-top: 20px;
+        }
+        p {
+            font-size: 1.2rem;
+        }
+        .wheel-container {
+            position: relative;
+            width: 700px;
+            height: 300px;
+            margin: 50px auto;
+            overflow: hidden;
+            border: 5px solid #fff;
+            border-radius: 10px;
+            background: #222;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        .wheel {
+            display: flex;
+            position: absolute;
+            height: 100%;
+            transform: translateX(0);
+        }
+        .waifu {
+            flex: 0 0 230px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #fff;
+            text-shadow: 1px 1px 5px #000;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .spin-button {
+            font-size: 1.5rem;
+            padding: 15px 30px;
+            background-color: #ff4081;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+        .spin-button:hover {
+            background-color: #ff1c5c;
+        }
+        .price {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: #ffeb3b;
+            margin: 10px 0;
+        }
+        .indicator {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            
+            margin-top: -20px;
+        }
+        .message {
+            font-size: 2rem;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+        .waifu-gallery {
+    margin: 50px 0;
+    padding: 20px;
+    background-color: #222;
+    color: #fff;
+    text-align: center;
+}
+
+.waifu-gallery h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.waifu-gallery-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px;
+    justify-items: center;
+}
+
+.waifu-card {
+    background-color: #333;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.waifu-card:hover {
+    transform: scale(1.05);
+}
+
+.waifu-card img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.waifu-card p {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+/* Reklamní bannery */
+.ad-banner {
+    position: fixed;
+    width: 250px;
+    padding: 20px;
+    background-color: #ff4081;
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 1000;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.ad-banner p {
+    margin: 0;
+}
+
+.ad-banner.left {
+    top: 50%;
+    left: -270px;
+    transform: translateY(-50%);
+}
+
+.ad-banner.right {
+    top: 50%;
+    right: -270px;
+    transform: translateY(-50%);
+}
+.ad-banner .ad-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-banner .ad-image {
+    max-width: 100%;  /* Zajistí, že obrázek nebude větší než kontejner */
+    height: auto;     /* Zachová poměr stran obrázku */
+    max-height: 150px; /* Omezí výšku obrázku na maximálně 150px */
+    object-fit: contain; /* Umožní, že obrázek se přizpůsobí bez oříznutí */
+}
+
+.ad-banner .ad-text {
+    font-size: 1.2rem;
+    margin-top: 10px;
+}
+
+/* Efekt pro přiblížení reklamy při najetí myší */
+.ad-banner:hover {
+    transform: translateX(20px) translateY(-50%);
+}
+
+/* Animace pro objevování bannerů */
+@keyframes slideInLeft {
+    from {
+        left: -270px;
+    }
+    to {
+        left: 20px;
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        right: -270px;
+    }
+    to {
+        right: 20px;
+    }
+}
+
+/* Aplikování animace při načítání stránky */
+.ad-banner.left {
+    animation: slideInLeft 1s ease-out forwards;
+}
+
+.ad-banner.right {
+    animation: slideInRight 1s ease-out forwards;
+}
+/* Otravná reklama */
+/* Otravná reklama */
+.popup-ad {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 400px;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: none; /* Initially hidden */
+}
+
+.popup-ad .popup-content {
+    position: relative;
+}
+
+.popup-ad .popup-content img {
+    width: 100%; /* Zajistí, že obrázek nebude větší než kontejner */
+    height: auto; /* Zachová poměr stran obrázku */
+    border-radius: 10px; /* Zaoblení rohů obrázku */
+    margin-top: 15px; /* Mezera mezi textem a obrázkem */
+    max-height: 300px; /* Maximální výška obrázku, aby nepřekračoval rozměry reklamy */
+}
+
+.popup-ad .close-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #ff4081;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.popup-ad .close-button:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+}
+
+.popup-ad .close-button:hover:not(:disabled) {
+    background-color: #ff1c5c;
+}
+
+
+    </style>
+</head>
+<body>
+<header>
+    Waifu Wheel - Vytočte si svou waifu!
+</header>
+
+<h1>Waifu Wheel</h1>
+<p>Spin the wheel and win your waifu! Just <span class="price">$299</span> per spin!</p>
+
+<div class="wheel-container">
+    <div class="indicator" id="indicator"></div>
+    <div class="wheel" id="wheel">
+        <!-- Duplicate waifu entries to increase the number of waifus on the wheel -->
+        <div class="waifu" style="background-image: url('power.webp');">Power</div>
+        <div class="waifu" style="background-image: url('Nami.png');">Nami</div>
+        <div class="waifu" style="background-image: url('Makima.webp');">Makima</div>
+        <div class="waifu" style="background-image: url('Himeno.webp');">Himeno</div>
+        <div class="waifu" style="background-image: url('Reze.png');">Reze</div>
+        <div class="waifu" style="background-image: url('Froppy.png');">Froppy</div>
+        <div class="waifu" style="background-image: url('Noele.png');">Noele</div>
+        <div class="waifu" style="background-image: url('ZeroTwo.jpeg');">ZeroTwo</div>
+        <div class="waifu" style="background-image: url('Horikita.webp');">Horikita</div>
+        <div class="waifu" style="background-image: url('Alya.jpeg');">Alya</div>
+        <div class="waifu" style="background-image: url('Mitsuri.webp');">Mitsuri</div>
+        <div class="waifu" style="background-image: url('Yuki.webp');">Yuki</div>
+        <div class="waifu" style="background-image: url('Smutek.jpg');">Smutek</div>
+        <div class="waifu" style="background-image: url('Gray.jpeg');">Gray</div>
+        <div class="waifu" style="background-image: url('Jolyne.avif');">Jolyne</div>
+        <div class="waifu" style="background-image: url('');">Monet</div>
+        <div class="waifu" style="background-image: url('Robin.png');">Robin</div>
+        <div class="waifu" style="background-image: url('Mimosa.jpg');">Mimosa</div>
+        <div class="waifu" style="background-image: url('Nino.jpg');">Nino</div>
+        <div class="waifu" style="background-image: url('Yotsuba.webp');">Yotsuba</div>
+        <div class="waifu" style="background-image: url('Miku.jpg');">Miku</div>
+        <div class="waifu" style="background-image: url('Itsuki.avif');">Itsuki</div>
+        <div class="waifu" style="background-image: url('Ichika.avif');">Ichika</div>
+        <div class="waifu" style="background-image: url('Mei.webp');">Mei</div>
+        <div class="waifu" style="background-image: url('Nobara.webp');">Nobara</div>
+        <div class="waifu" style="background-image: url('Rika.jpeg');">Rika</div>
+        <div class="waifu" style="background-image: url('Kobeni.webp');">Kobeni</div>
+
+        <!-- Repeated waifus to extend the wheel -->
+        <div class="waifu" style="background-image: url('power.webp');">Power</div>
+        <div class="waifu" style="background-image: url('Nami.png');">Nami</div>
+        <div class="waifu" style="background-image: url('Makima.webp');">Makima</div>
+        <div class="waifu" style="background-image: url('Himeno.webp');">Himeno</div>
+        <div class="waifu" style="background-image: url('Reze.png');">Reze</div>
+        <div class="waifu" style="background-image: url('Froppy.png');">Froppy</div>
+        <div class="waifu" style="background-image: url('Noele.png');">Noele</div>
+        <div class="waifu" style="background-image: url('ZeroTwo.jpeg');">ZeroTwo</div>
+        <div class="waifu" style="background-image: url('Horikita.webp');">Horikita</div>
+        <div class="waifu" style="background-image: url('Alya.jpeg');">Alya</div>
+        <div class="waifu" style="background-image: url('Mitsuri.webp');">Mitsuri</div>
+        <div class="waifu" style="background-image: url('Yuki.webp');">Yuki</div>
+        <div class="waifu" style="background-image: url('Smutek.jpg');">Smutek</div>
+        <div class="waifu" style="background-image: url('Gray.jpeg');">Gray</div>
+        <div class="waifu" style="background-image: url('Jolyne.avif');">Jolyne</div>
+        <div class="waifu" style="background-image: url('Monet.png');">Monet</div>
+        <div class="waifu" style="background-image: url('Robin.png');">Robin</div>
+        <div class="waifu" style="background-image: url('Mimosa.jpg');">Mimosa</div>
+        <div class="waifu" style="background-image: url('Nino.jpg');">Nino</div>
+        <div class="waifu" style="background-image: url('Yotsuba.webp');">Yotsuba</div>
+        <div class="waifu" style="background-image: url('Miku.jpg');">Miku</div>
+        <div class="waifu" style="background-image: url('Itsuki.avif');">Itsuki</div>
+        <div class="waifu" style="background-image: url('Ichika.avif');">Ichika</div>
+        <div class="waifu" style="background-image: url('Mei.webp');">Mei</div>
+        <div class="waifu" style="background-image: url('Nobara.webp');">Nobara</div>
+        <div class="waifu" style="background-image: url('Rika.jpeg');">Rika</div>
+        <div class="waifu" style="background-image: url('Kobeni.webp');">Kobeni</div>
+    </div>
+</div>
+
+<button class="spin-button" id="spin-button" onclick="spinWheel()">Spin the Wheel!</button>
+<div class="message" id="congratulations-message">Gratulujeme! Vaše waifu je: <span id="waifu-name"></span></div>
+
+<footer>
+    © 2024 Waifu Wheel | Všechny práva vyhrazena
+</footer>
+
+<script>
+    let isSpinning = false;
+
+    function spinWheel() {
+        if (isSpinning) return; // Prevent multiple spins
+        isSpinning = true;
+
+        const wheel = document.getElementById('wheel');
+        const indicator = document.getElementById('indicator');
+        const itemCount = document.querySelectorAll('.waifu').length; // Dynamic count
+        const itemWidth = 230;
+
+        // Randomly select a spin duration between 8 to 12 seconds
+        const spinDuration = Math.random() * 4 + 8; // Duration in seconds
+
+        // Randomly select the number of items to spin through
+        const spinAmount = Math.floor(Math.random() * itemCount);
+        const spinDistance = spinAmount * itemWidth; // Ensure positive distance
+
+        // Set the transition for the wheel with cubic-bezier for speed changes
+        wheel.style.transition = `transform ${spinDuration}s cubic-bezier(0.68, 0, 0.27, 1)`; // Faster start, slower end
+
+        // Rotate the wheel to the right
+        wheel.style.transform = `translateX(-${spinDistance}px)`; // Move left to spin right
+
+        // Show the result after spinning
+        setTimeout(() => {
+            const selectedWaifu = document.querySelectorAll('.waifu')[spinAmount].innerText;
+            document.getElementById('waifu-name').innerText = selectedWaifu;
+            document.getElementById('congratulations-message').style.display = 'block';
+
+            // Adjust the indicator to point at the selected waifu
+            const indicatorPosition = (spinAmount * itemWidth) + (itemWidth / 2) - 10; // Shift left by 10 pixels
+            indicator.style.left = `${indicatorPosition}px`;
+
+            document.getElementById('spin-button').innerText = 'Spin Again';
+
+        }, spinDuration * 1000); // Show results after spin duration
+
+        // Prevent user from spinning again until reset
+        document.getElementById('spin-button').onclick = function() {
+            // Reset logic to prepare for the next spin
+            isSpinning = false; // Allow spinning again
+            document.getElementById('congratulations-message').style.display = 'none'; // Hide message
+            wheel.style.transition = 'none'; // Disable transition
+            wheel.style.transform = 'translateX(0)'; // Reset position
+            indicator.style.left = '50%'; // Reset indicator to center
+            this.innerText = 'Spin the Wheel!'; // Reset button text
+            this.onclick = spinWheel; // Restore the original function
+        };
+    }
+    // Funkce pro zobrazení popup reklamy
+function showPopupAd() {
+    const popupAd = document.getElementById('popup-ad');
+    const closeButton = document.getElementById('close-popup');
+
+    // Zobrazit reklamu
+    popupAd.style.display = 'block';
+
+    // Po 3 sekundách umožníme zavřít reklamu
+    setTimeout(() => {
+        closeButton.disabled = false;
+    }, 3000);
+
+    // Umožní zavřít reklamu
+    closeButton.onclick = () => {
+        popupAd.style.display = 'none';
+    };
+}
+
+// Náhodně zobrazit popup reklamu po 3 až 7 sekundách
+setTimeout(() => {
+    if (Math.random() < 0.5) {  // 50% šance, že se reklama objeví
+        showPopupAd();
+    }
+}, Math.random() * 4000 + 3000); // Zpoždění mezi 3 a 7 sekundami
+
+</script>
+
+<section class="waifu-gallery"></section>
+    <h2>Naše Waifu Galerie</h2>
+    <div class="waifu-gallery-container">
+        <div class="waifu-card">
+            <img src="Power.webp" alt="Power">
+            <p>Power</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Nami.png" alt="Nami">
+            <p>Nami</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Makima.webp" alt="Makima">
+            <p>Makima</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Himeno.webp" alt="Himeno">
+            <p>Himeno</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Reze.png" alt="Reze">
+            <p>Reze</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Froppy.png" alt="Froppy">
+            <p>Froppy</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Noele.png" alt="Noele">
+            <p>Noele</p>
+        </div>
+        <div class="waifu-card">
+            <img src="ZeroTwo.jpeg" alt="ZeroTwo">
+            <p>ZeroTwo</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Horikita.webp" alt="Horikita">
+            <p>Horikita</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Alya.jpeg" alt="Alya">
+            <p>Alya</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Mitsuri.webp" alt="Mitsuri">
+            <p>Mitsuri</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Yuki.webp" alt="Yuki">
+            <p>Yuki</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Smutek.jpg" alt="Smutek">
+            <p>Smutek</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Gray.jpeg" alt="Gray">
+            <p>Gray</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Jolyne.avif" alt="Jolyne">
+            <p>Jolyne</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Monet.png" alt="Monet">
+            <p>Monet</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Robin.png" alt="Robin">
+            <p>Robin</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Mimosa.jpg" alt="Mimosa">
+            <p>Mimosa</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Nino.jpg" alt="Nino">
+            <p>Nino</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Yotsuba.webp" alt="Yotsuba">
+            <p>Yotsuba</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Miku.jpg" alt="Miku">
+            <p>Miku</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Itsuki.avif" alt="Itsuki">
+            <p>Itsuki</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Ichika.avif" alt="Ichika">
+            <p>Ichika</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Mei.webp" alt="Mei">
+            <p>Mai</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Nobara.webp" alt="Nobara">
+            <p>Nobara</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Rika.jpeg" alt="Rika">
+            <p>Rika</p>
+        </div>
+        <div class="waifu-card">
+            <img src="Kobeni.webp" alt="Kobeni">
+            <p>Kobeni</p>
+        </div>
+        
+        </div>
+    </div>
+</section>
+<!-- Reklamní bannery -->
+<div class="ad-banner left">
+    <div class="ad-content">
+        <img src="Reklama1.jpg" alt="Random Image" class="ad-image">
+        <div class="ad-text">
+            <p>Nejlepší nabídka! Klikněte sem!</p>
+        </div>
+    </div>
+</div>
+<div class="ad-banner right">
+    <div class="ad-content">
+        <img src="Waifu2.jpg" alt="Random Image" class="ad-image">
+        <div class="ad-text">
+            <p>Vítězné možnosti pro Vás! Získejte slevu 50%!</p>
+        </div>
+    </div>
+</div>
+<!-- Otravná reklama -->
+<div class="popup-ad" id="popup-ad">
+    <div class="popup-content">
+        <p>Chcete získat speciální nabídku? Klikněte na tlačítko níže!</p>
+        <img src="waifu3.webp">
+        <button id="close-popup" class="close-button" disabled>Zavřít reklamu</button>
+    </div>
+</div>
+
+
+</body>
+</html>
